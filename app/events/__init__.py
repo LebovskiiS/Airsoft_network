@@ -1,6 +1,6 @@
 from flask import Blueprint
 
-auth = Blueprint('auth', __name__)
-
+events = Blueprint('events', __name__)
 from . import routes
+
 
