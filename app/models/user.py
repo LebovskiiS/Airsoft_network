@@ -9,7 +9,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(30),unique=True, nullable= False)
     email: Mapped[str] = mapped_column(String(30),unique=True, nullable= False)
     password: Mapped[str] = mapped_column(String(255), nullable= False)
-    events = relationship('Event', back_populates= 'users', secondary= 'UserEventAssociation')
+    events = relationship('Event', secondary= 'users_events_association', back_populates= 'users')
 
 
 

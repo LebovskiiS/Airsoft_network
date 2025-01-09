@@ -1,7 +1,10 @@
+from sqlalchemy import select, and_
+from sqlalchemy.orm import Session
 from http.client import responses
 from unittest import TestCase
 from app import app
 from app.models import User, Base, engine
+from app.security.hashing import hash_password
 
 class AuthTestCase(TestCase):
     @classmethod
@@ -31,6 +34,16 @@ class AuthTestCase(TestCase):
         test_data = {'email':'test_test61s@gmail.com', 'password':'e6rfdsdf','username':'testsfr1om6tests' }
         response = self.client.post('/auth/registration/submit', data= test_data)
         self.assertEqual('submitted', response.get_data(as_text=True))
+        stmt = select(User).where(
+            and_(
+                User.username == test_data['username'],
+                User.email == test_data['email'],
+                User.password == hash_password(test_data['password'])
+            )
+        )
+        with Session(engine) as session:
+            data = session.execute(stmt).scalar_one_or_none()
+        self.assertIsNotNone(data)
 
 
 
@@ -40,6 +53,8 @@ class AuthTestCase(TestCase):
         self.assertEqual('submitted', response.get_data(as_text=True))
         response = self.client.post('/auth/registration/submit', data=test_data)
         self.assertEqual('error not uniq data entered', response.get_data(as_text= True))
+        #проверить что этот же пользователь туда не попал
+
 
 
     def test_empty_fields_registration(self):
@@ -52,7 +67,7 @@ class AuthTestCase(TestCase):
 
     def test_login_submit(self):
         test_data = {'email': 'ttest@gmail.com', 'password': 'testpassword', 'username': 'testt1'}
-        self.client.post('/auth/registration/submit', data=test_data)
+        self.client.post('/auth/registration/submit', data= test_data)
         response = self.client.post('/auth/login/submit', data= {'email': 'test@gmail.com',
                                                        'password':'testpassword'}                          )
         self.assertEqual(200, response.status_code)

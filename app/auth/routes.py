@@ -1,6 +1,7 @@
 from app.security.hashing import hash_password
 from sqlalchemy import select
-from flask import render_template, request, session
+from flask import render_template, request, redirect
+from flask import session as flask_session
 from logger import  logger
 from . import auth
 from app.models import User, session
@@ -49,12 +50,13 @@ def login_submit_view():
     username = request.form.get('username')
     password = request.form.get('password')
     hashed_password = hash_password(password)
+    logger.debug(f'hashed password {hashed_password}')
     query = select(User).where(User.username == username, User.password == hashed_password)
     result = session.execute(query).scalar_one_or_none()
     if result:
-        session['user_id'] = result.id
+        flask_session['user_id'] = result.id
         logger.debug(f'User {username} authenticated successfully')
-        return render_template('profile.html')
+        return redirect('/events')
     else:
         logger.debug('authentication failed')
         return 'Auth failed'
